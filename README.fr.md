@@ -37,3 +37,11 @@ python3 -m unittest discover -s tests -v
 ```
 
 Python 3.11+, Git ; aucune dépendance Python. MIT. Outil alpha en ligne de commande, sans intégration avec Agent Office ou Worktrunk. Il ne fusionne, ne tire ni ne pousse à votre place.
+
+## Vérifier la branche terminée avant revue
+
+```sh
+python3 guard.py review --repo /chemin/feature --base origin/main --json --lang fr
+```
+
+`review` récupère la base et accepte les commits locaux de fonctionnalité seulement si la base récupérée appartient à l’ascendance de `HEAD`. Une branche sans un commit récemment fusionné dans la base sort avec `2` et `base_missing` ; fusionnez ou rebasez volontairement, puis vérifiez à nouveau. Le reçu contient `contains_base`, `ahead_by` (commits accessibles seulement depuis HEAD) et les SHA observés. `--expected` exige un SHA complet et bloque toujours une base mise en file qui a changé. `check` et `create` conservent leur règle d’égalité stricte. Cette vérification d’ascendance ne détecte pas les régressions sémantiques, ne remplace pas la revue, ne prouve pas un arbre propre et ne verrouille pas le distant après récupération.

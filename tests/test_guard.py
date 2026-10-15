@@ -35,4 +35,32 @@ class GuardTests(unittest.TestCase):
   expected=inspect(self.local,"origin/main")["observed_base"]
   self.advance_remote();run("git","-C",str(self.local),"pull","--ff-only","origin","main")
   self.assertEqual(inspect(self.local,"origin/main",expected)["status"],"queued_base_moved")
+ def test_review_accepts_new_commits_but_bootstrap_does_not(self):
+  (self.local/"feature.txt").write_text("feature\n")
+  run("git","-C",str(self.local),"add",".");run("git","-C",str(self.local),"commit","-m","feature")
+  result=inspect(self.local,"origin/main",review=True)
+  self.assertEqual(result["status"],"ready");self.assertEqual(result["ahead_by"],1)
+  self.assertEqual(inspect(self.local,"origin/main")["status"],"stale_local")
+ def test_review_blocks_branch_missing_new_remote_commits_then_accepts_merge(self):
+  (self.local/"feature.txt").write_text("feature\n")
+  run("git","-C",str(self.local),"add",".");run("git","-C",str(self.local),"commit","-m","feature")
+  self.advance_remote()
+  self.assertEqual(inspect(self.local,"origin/main",review=True)["status"],"base_missing")
+  run("git","-C",str(self.local),"merge","--no-edit","origin/main")
+  self.assertEqual(inspect(self.local,"origin/main",review=True)["status"],"ready")
+ def test_review_queued_receipt_takes_precedence_and_rejects_short_sha(self):
+  expected=inspect(self.local,"origin/main")["observed_base"]
+  self.advance_remote()
+  self.assertEqual(inspect(self.local,"origin/main",expected,review=True)["status"],"queued_base_moved")
+  with self.assertRaises(ValueError):inspect(self.local,"origin/main",expected[:8])
+ def test_review_blocks_unrelated_history(self):
+  run("git","-C",str(self.local),"checkout","--orphan","unrelated")
+  run("git","-C",str(self.local),"commit","-m","unrelated")
+  self.assertEqual(inspect(self.local,"origin/main",review=True)["status"],"base_missing")
+ def test_review_cli_languages(self):
+  import contextlib,io
+  for lang in ("fr","en","es"):
+   with contextlib.redirect_stdout(io.StringIO()) as out:
+    self.assertEqual(main(["review","--repo",str(self.local),"--lang",lang]),0)
+   self.assertTrue(out.getvalue().strip())
 if __name__=="__main__":unittest.main()

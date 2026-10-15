@@ -37,3 +37,11 @@ python3 -m unittest discover -s tests -v
 ```
 
 Python 3.11+, Git; sin paquetes Python. MIT. Herramienta alfa de línea de comandos, sin integración con Agent Office ni Worktrunk. No fusiona, descarga cambios ni sube commits por ti.
+
+## Comprobar la rama terminada antes de revisión
+
+```sh
+python3 guard.py review --repo /ruta/feature --base origin/main --json --lang es
+```
+
+`review` obtiene la base y acepta commits locales de funcionalidad solo si la base obtenida pertenece a la ascendencia de `HEAD`. Una rama sin un commit recién integrado en la base termina con `2` y `base_missing`; integre o rebase deliberadamente y vuelva a comprobar. El recibo contiene `contains_base`, `ahead_by` (commits accesibles solo desde HEAD) y los SHA observados. `--expected` exige un SHA completo y sigue bloqueando una base en cola que ha cambiado. `check` y `create` conservan su igualdad estricta. Esta comprobación de ascendencia no detecta reversiones semánticas, no sustituye la revisión, no demuestra un árbol limpio ni bloquea el remoto después de obtenerlo.
